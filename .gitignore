@@ -1,0 +1,52 @@
+# Ignore filetypes with these suffixes
+*.pyc
+*.swp
+
+# Ignore files with these names
+.sync.json
+.rsync.json
+.git
+.DS_Store
+.idea
+.buildinfo
+.nojekyll
+build_image.sh
+
+# Ignore folders and their contents with these names
+.vscode
+
+# Ignore test, build and distribution files
+build/
+dist/*.whl
+*.egg
+*.egg-info/
+.pytest_cache/
+__pycache__/
+
+# Ignore built documentation files
+site/
+.cache/
+
+# Ignore local testing directories
+local/
+configs/
+.claude/
+
+# uv
+#uv.lock
+#.python-version
+.venv
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# Repos
+emit-sds-l2b
+emit-utils
+
+# Generated files
+tetracorder/tetracorder.cmds/tetracorder6.00a.cmds/**/*tetrapy*
+tetracorder/sl1/usgs/tetrapy
+reslib
+reflib
