@@ -1,0 +1,55 @@
+# This workflow performs functions that must occur before launching all the Python tests
+# The cache will detect if any of the extra downloads need an update and, if so, will
+# fail the workflow. This is required so a maintainer can manually delete the existing
+# cache. Deliberate updates to the cache is important to keep track the health and
+# status of the cache instead of automatic updates
+# Then launch the Python tests in parallel
+#
+# In order to support Windows testing, the cache uses the enableCrossOsArchive flag.
+# The isofit.data.env (ini) assumes the default location for the cached data is
+# ~/.isofit -- however, we can't use this as the path in the cache action because
+# Windows doesn't restore it correctly for some reason
+# As such, the extras are built in the local working directory and cached there, then
+# moved to ~/.isofit after, allowing both Linux and Windows to put the cache into the
+# correct locations
+#
+# This workflow is UNTRUSTED. It will NOT have access to the repo SECRETS, but it is
+# allowed to be modified by a PR.
+
+name: Build
+
+on:
+  pull_request:
+    branches-ignore: ["gh-pages"]
+    paths: ["tetrapy/**", "pyproject.toml", ".github/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Test building the package
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.25"
+          python-version: "3.12"
+
+      - name: Build package
+        shell: bash
+        run: uv build
+
+      - name: Smoke test (wheel)
+        run: uv run --isolated --no-project --with dist/*.whl isofit
+
+      - name: Smoke test (source distribution)
+        run: uv run --isolated --no-project --with dist/*.tar.gz isofit

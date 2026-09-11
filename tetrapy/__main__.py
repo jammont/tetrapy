@@ -22,6 +22,7 @@ Section = click.option("-s", "--section", help="Subsection of the yaml to load r
 
 
 @click.group()
+@click.version_option()
 def cli() -> None:
     """
     Tetracorder-lite: containerized USGS Tetracorder for mineral identification.
