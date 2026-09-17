@@ -118,7 +118,9 @@ def override(box: Box, ctx: Union[click.Context, list[str]]) -> Box:
 
     Scans the extra CLI args for ``--dotted.key value`` pairs, parses each value as a
     Python literal (falling back to a string), and merges them into ``box`` using Box
-    dot-notation, so e.g. ``--tetrun.args '["band", 10]'`` overrides a nested key.
+    dot-notation, so e.g. ``--tetrun.args '["band", 10]'`` overrides a nested key. A
+    bare ``--key`` with no following value (at the end of the args or immediately
+    before another ``--flag``) is treated as a boolean switch and set to ``True``.
 
     Parameters
     ----------
@@ -151,11 +153,13 @@ def override(box: Box, ctx: Union[click.Context, list[str]]) -> Box:
         if arg.startswith("--"):
             key = arg[2:]
 
-            # Boolean flags are not supported; every option must carry a value
+            # A bare flag (end of args, or immediately followed by another --flag)
+            # is a boolean switch and resolves to True, e.g. `--key`
             if i + 1 >= len(args) or args[i + 1].startswith("--"):
-                msg = f"Option --{key} is missing a value; every option must be given as --{key} <value>"
-                Logger.error(msg)
-                raise ValueError(msg)
+                Logger.debug(f"Setting {key} as True")
+                box[key] = True
+                i += 1
+                continue
 
             val = args[i + 1]
             try:
