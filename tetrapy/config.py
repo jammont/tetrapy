@@ -138,8 +138,11 @@ def override(box: Box, ctx: Union[click.Context, list[str]]) -> Box:
     else:
         args = ctx
 
-    # Convert dot notation to dict
-    conv = Box(default_box=True, box_dots=True)
+    # Assign overrides directly with box_dots so dotted keys resolve into nested
+    # sections. merge_update is deliberately avoided: it silently drops None values
+    # when merging into an existing section, so `--key None` would be a no-op.
+    if isinstance(box, dict):
+        box = Box(box, default_box=True, box_dots=True)
 
     i = 0
     while i < len(args):
@@ -169,16 +172,11 @@ def override(box: Box, ctx: Union[click.Context, list[str]]) -> Box:
                     Logger.debug(f"Using --{key} {val!r} as a plain string")
 
             Logger.debug(f"Overriding {key} with {val!r}")
-            conv[key] = val
+            box[key] = val
 
             i += 2
         else:
             i += 1
-
-    # Override config with new converted values
-    if isinstance(box, dict):
-        box = Box(box, default_box=True)
-    box.merge_update(conv)
 
     return box
 
